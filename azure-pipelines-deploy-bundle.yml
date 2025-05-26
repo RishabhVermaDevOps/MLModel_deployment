@@ -1,0 +1,36 @@
+stages:
+  - template: .build/azure-pipelines-template-stage-deploy-bundle-cicd.yml
+    parameters:
+      environment: 'DEV'
+      azureSubscription: 'sp_aa_unitycatalog_schema_owner_dev'
+      workingDirectory: CashForecastingTool
+      condition: |
+                and(
+                  succeeded(), 
+                      ne(variables['Build.SourceBranch'], 'refs/heads/release')
+                    )
+
+  - template: .build/azure-pipelines-template-stage-deploy-bundle-cicd.yml
+    parameters:
+      environment: 'STG'
+      azureSubscription: 'sp_aa_unitycatalog_schema_owner_stg'
+      workingDirectory: 'CashForecastingTool'
+      dependsOn: DEV
+      condition: | 
+                and(
+                  always(), 
+                    eq(variables['Build.SourceBranch'], 'refs/heads/master'),
+                    ne(variables['Build.SourceBranch'], 'refs/heads/release')
+                ) 
+
+  - template: .build/azure-pipelines-template-stage-deploy-bundle-cicd.yml
+    parameters:
+      environment: 'PROD'
+      azureSubscription: 'sp_aa_unitycatalog_schema_owner_prod'
+      workingDirectory: 'CashForecastingTool'
+      dependsOn: STG
+      condition: | 
+                and(
+                  always(), 
+                    eq(variables['Build.SourceBranch'], 'refs/heads/master')
+                )
